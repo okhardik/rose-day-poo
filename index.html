@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Digital Rose for Poo</title>
+    <style>
+        body, html {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            overflow: hidden;
+            background: #050505;
+            font-family: 'Georgia', serif;
+        }
+
+        canvas { display: block; }
+
+        #ui-layer {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .instruction {
+            color: rgba(255, 255, 255, 0.6);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            transition: opacity 1s;
+            text-align: center;
+            padding: 20px;
+        }
+
+        #message-card {
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 77, 109, 0.3);
+            padding: 40px;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 2s ease;
+            max-width: 300px;
+        }
+
+        #message-card.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        h1 { color: #ff4d6d; font-weight: 300; margin-bottom: 20px; font-size: 1.5rem; letter-spacing: 5px; }
+        p { color: #ccc; line-height: 1.6; font-size: 0.9rem; }
+
+        /* Scratched mist effect */
+        #overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 5;
+            cursor: crosshair;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="overlay"></canvas>
+    <canvas id="flowerCanvas"></canvas>
+
+    <div id="ui-layer">
+        <div id="hint" class="instruction">Kardo screen clear Poo...</div>
+        <div id="message-card">
+            <h1>POO</h1>
+            <p>I've many girlfriends but you're my favourite one and here's the special rose for my favourite one.</p>
+            <p>Thank you for blooming in my life bub.</p>
+            <p>Rose dayy hi kehdeee</p>
+            <div style="color: #ff4d6d; margin-top: 20px; font-size: 1.2rem;">🌹</div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('flowerCanvas');
+        const ctx = canvas.getContext('2d');
+        const overlay = document.getElementById('overlay');
+        const octx = overlay.getContext('2d');
+        const hint = document.getElementById('hint');
+        
+        let width, height;
+        let mouse = { x: -1000, y: -1000, active: false };
+        let particles = [];
+        let particlesCreated = false;
+
+        function init() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = overlay.width = width;
+            canvas.height = overlay.height = height;
+
+            // Initialize Mist Overlay
+            octx.fillStyle = '#1a1a1a';
+            octx.fillRect(0, 0, width, height);
+            octx.globalCompositeOperation = 'destination-out';
+        }
+
+        // Particle Class for Rose Petals
+        class Petal {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.size = Math.random() * 8 + 4;
+                this.speedX = Math.random() * 2 - 1;
+                this.speedY = Math.random() * 2 - 1;
+                this.angle = Math.random() * 360;
+                this.spin = Math.random() * 2 - 1;
+                this.color = `rgba(${150 + Math.random() * 105}, ${Math.random() * 50}, ${50 + Math.random() * 50}, ${0.6 + Math.random() * 0.4})`;
+            }
+
+            update() {
+                // Follow Mouse Logic
+                if (mouse.active) {
+                    let dx = mouse.x - this.x;
+                    let dy = mouse.y - this.y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < 200) {
+                        this.x += dx * 0.05;
+                        this.y += dy * 0.05;
+                    }
+                }
+
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.angle += this.spin;
+
+                if (this.x > width) this.x = 0;
+                if (this.x < 0) this.x = width;
+                if (this.y > height) this.y = 0;
+                if (this.y < 0) this.y = height;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle * Math.PI / 180);
+                ctx.fillStyle = this.color;
+                
+                // Draw Petal Shape
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.bezierCurveTo(this.size, -this.size, this.size * 2, this.size, 0, this.size * 2);
+                ctx.bezierCurveTo(-this.size * 2, this.size, -this.size, -this.size, 0, 0);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function createParticles() {
+            for (let i = 0; i < 150; i++) {
+                particles.push(new Petal());
+            }
+            particlesCreated = true;
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            
+            if(particlesCreated) {
+                particles.forEach(p => {
+                    p.update();
+                    p.draw();
+                });
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        // Interaction Handling
+        function handleMove(e) {
+            const x = e.touches ? e.touches[0].clientX : e.clientX;
+            const y = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            mouse.x = x;
+            mouse.y = y;
+            mouse.active = true;
+
+            // Scratch Mist
+            octx.beginPath();
+            octx.arc(x, y, 40, 0, Math.PI * 2);
+            octx.fill();
+
+            if(!particlesCreated) {
+                createParticles();
+                hint.style.opacity = 0;
+                setTimeout(() => {
+                    document.getElementById('message-card').classList.add('show');
+                }, 2000);
+            }
+        }
+
+        window.addEventListener('mousemove', handleMove);
+        window.addEventListener('touchmove', handleMove);
+        window.addEventListener('resize', init);
+
+        init();
+        animate();
+    </script>
+</body>
+</html>
