@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Digital Rose for Poo</title>
+    <title>Rose Day | For Poo</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         body, html {
@@ -46,82 +46,57 @@
             text-align: center;
             opacity: 0;
             transform: translateY(20px);
-            transition: all 1.5s ease;
+            transition: all 1s ease;
             max-width: 85%;
             pointer-events: none;
         }
 
-        #message-card.show {
-            opacity: 1;
-            transform: translateY(0);
-            pointer-events: all; /* Enable button click */
-        }
+        #message-card.show { opacity: 1; transform: translateY(0); pointer-events: all; }
 
-        h1 { color: #ff4d6d; font-weight: 300; margin-bottom: 15px; font-size: 1.5rem; letter-spacing: 5px; }
-        p { color: #ccc; line-height: 1.6; font-size: 0.9rem; margin-bottom: 10px; }
-
-        .surprise-btn {
+        .btn {
             background: none;
             border: 1px solid #ff4d6d;
             color: #ff4d6d;
-            padding: 10px 20px;
+            padding: 12px 20px;
             margin-top: 15px;
             cursor: pointer;
             font-family: 'Georgia', serif;
             letter-spacing: 2px;
-            transition: 0.3s;
             text-transform: uppercase;
             font-size: 0.7rem;
+            pointer-events: all;
         }
 
-        .surprise-btn:hover {
-            background: #ff4d6d;
-            color: white;
-            box-shadow: 0 0 15px #ff4d6d;
-        }
-
-        /* The Monkey Surprise Styling */
-        #monkey-overlay {
+        /* Surprise Layers */
+        .surprise-overlay {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: white; /* Flash effect color */
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 100;
             visibility: hidden;
             opacity: 0;
             transition: opacity 0.5s ease;
+            background: rgba(0,0,0,0.95);
+            text-align: center;
         }
 
-        #monkey-overlay.active {
-            visibility: visible;
-            opacity: 1;
-            background: rgba(0,0,0,0.9); /* Darken background after flash */
-        }
+        .surprise-overlay.active { visibility: visible; opacity: 1; }
 
-        #monkey-img {
-            max-width: 90%;
-            max-height: 80%;
+        .surprise-img {
+            max-width: 85%;
+            max-height: 60%;
             border: 5px solid white;
-            box-shadow: 0 0 30px rgba(255,255,255,0.5);
-            transform: scale(0.5);
-            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 30px rgba(255,255,255,0.2);
+            margin-bottom: 20px;
         }
 
-        #monkey-overlay.active #monkey-img {
-            transform: scale(1);
-        }
-
-        /* Scratched mist effect */
-        #overlay {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 5;
-            cursor: crosshair;
-        }
+        .oops-text { color: #ff4d6d; font-style: italic; margin-bottom: 10px; }
+        
+        #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; cursor: crosshair; }
     </style>
 </head>
 <body>
@@ -129,20 +104,29 @@
     <canvas id="overlay"></canvas>
     <canvas id="flowerCanvas"></canvas>
 
-    <!-- Surprise Layer -->
-    <div id="monkey-overlay">
-        <img src="monkey.png" id="monkey-img" alt="Surprise Poo!">
-        <div style="position:absolute; bottom: 50px; color: white; letter-spacing: 3px;">HAPPY ROSE DAY BUB! ❤️</div>
+    <!-- Twist 1: The Gorilla -->
+    <div id="twist-1" class="surprise-overlay">
+        <img src="gorilla.png" class="surprise-img">
+        <div class="oops-text">Oopss ye to galat hai... wait...</div>
+        <button class="btn" onclick="showFinalTwist()">Click for the right one</button>
+    </div>
+
+    <!-- Twist 2: The Gentleman -->
+    <div id="twist-2" class="surprise-overlay">
+        <img src="monkey.png" class="surprise-img">
+        <h2 style="color:white; letter-spacing: 4px;">HAPPY ROSE DAY POO! ❤️</h2>
+        <p style="color:#ccc">Ab ye sahi hai.</p>
+        <button class="btn" onclick="location.reload()">Reset</button>
     </div>
 
     <div id="ui-layer">
         <div id="hint" class="instruction">Kardo screen clear Poo...</div>
         <div id="message-card">
-            <h1>POO</h1>
-            <p>I've many girlfriends but you're my favourite one and here's the special rose for my favourite one.</p>
-            <p>Thank you for blooming in my life bub.</p>
-            <p><i>Rose dayy hi kehdeee</i></p>
-            <button class="surprise-btn" onclick="showSurprise()">Click for a surprise</button>
+            <h1 style="color: #ff4d6d; font-weight: 300;">POO</h1>
+            <p style="color:#ccc">I've many girlfriends but you're my favourite one and here's the special rose for my favourite one.</p>
+            <p style="color:#ccc">Thank you for blooming in my life bub.</p>
+            <p style="color:#ff4d6d; font-size: 0.8rem;"><i>Rose dayy hi kehdeee</i></p>
+            <button class="btn" onclick="showFirstTwist()">Click for a surprise</button>
         </div>
     </div>
 
@@ -183,31 +167,18 @@
                 if (mouse.active) {
                     let dx = mouse.x - this.x;
                     let dy = mouse.y - this.y;
-                    let distance = Math.sqrt(dx * dx + dy * dy);
-                    if (distance < 200) {
-                        this.x += dx * 0.05;
-                        this.y += dy * 0.05;
-                    }
+                    if (Math.sqrt(dx*dx + dy*dy) < 200) { this.x += dx * 0.05; this.y += dy * 0.05; }
                 }
-                this.x += this.speedX;
-                this.y += this.speedY;
-                this.angle += this.spin;
-                if (this.x > width) this.x = 0;
-                if (this.x < 0) this.x = width;
-                if (this.y > height) this.y = 0;
-                if (this.y < 0) this.y = height;
+                this.x += this.speedX; this.y += this.speedY; this.angle += this.spin;
+                if (this.x > width) this.x = 0; if (this.x < 0) this.x = width;
+                if (this.y > height) this.y = 0; if (this.y < 0) this.y = height;
             }
             draw() {
-                ctx.save();
-                ctx.translate(this.x, this.y);
-                ctx.rotate(this.angle * Math.PI / 180);
-                ctx.fillStyle = this.color;
-                ctx.beginPath();
-                ctx.moveTo(0, 0);
-                ctx.bezierCurveTo(this.size, -this.size, this.size * 2, this.size, 0, this.size * 2);
-                ctx.bezierCurveTo(-this.size * 2, this.size, -this.size, -this.size, 0, 0);
-                ctx.fill();
-                ctx.restore();
+                ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.angle * Math.PI / 180);
+                ctx.fillStyle = this.color; ctx.beginPath(); ctx.moveTo(0,0);
+                ctx.bezierCurveTo(this.size, -this.size, this.size*2, this.size, 0, this.size*2);
+                ctx.bezierCurveTo(-this.size*2, this.size, -this.size, -this.size, 0, 0);
+                ctx.fill(); ctx.restore();
             }
         }
 
@@ -218,12 +189,7 @@
 
         function animate() {
             ctx.clearRect(0, 0, width, height);
-            if(particlesCreated) {
-                particles.forEach(p => {
-                    p.update();
-                    p.draw();
-                });
-            }
+            if(particlesCreated) particles.forEach(p => { p.update(); p.draw(); });
             requestAnimationFrame(animate);
         }
 
@@ -231,36 +197,37 @@
             const x = e.touches ? e.touches[0].clientX : e.clientX;
             const y = e.touches ? e.touches[0].clientY : e.clientY;
             mouse.x = x; mouse.y = y; mouse.active = true;
-            octx.beginPath();
-            octx.arc(x, y, 40, 0, Math.PI * 2);
-            octx.fill();
-
+            octx.beginPath(); octx.arc(x, y, 40, 0, Math.PI * 2); octx.fill();
             if(!particlesCreated) {
                 createParticles();
                 hint.style.opacity = 0;
-                setTimeout(() => {
-                    document.getElementById('message-card').classList.add('show');
-                }, 2000);
+                setTimeout(() => document.getElementById('message-card').classList.add('show'), 2000);
             }
         }
 
-        // SURPRISE LOGIC
-        function showSurprise() {
-            const monkey = document.getElementById('monkey-overlay');
-            monkey.style.visibility = 'visible';
-            monkey.style.opacity = '1';
-            
-            // Trigger Confetti
-            confetti({
-                particleCount: 150,
-                spread: 70,
-                origin: { y: 0.6 },
-                colors: ['#ff4d6d', '#ffffff', '#ffb3c1']
-            });
+        // NAVIGATION LOGIC
+        function showFirstTwist() {
+            document.getElementById('twist-1').classList.add('active');
+        }
 
-            setTimeout(() => {
-                monkey.classList.add('active');
-            }, 50);
+        function showFinalTwist() {
+            document.getElementById('twist-1').classList.remove('active');
+            document.getElementById('twist-2').classList.add('active');
+            
+            // Celebration Confetti
+            var duration = 5 * 1000;
+            var animationEnd = Date.now() + duration;
+            var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 200 };
+
+            function randomInRange(min, max) { return Math.random() * (max - min) + min; }
+
+            var interval = setInterval(function() {
+                var timeLeft = animationEnd - Date.now();
+                if (timeLeft <= 0) return clearInterval(interval);
+                var particleCount = 50 * (timeLeft / duration);
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 250);
         }
 
         window.addEventListener('mousemove', handleMove);
